@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,23 +27,23 @@ public abstract class BaseCrawler {
 
 	private final static int TASK_NUM = 10;
 	private HashMap<String, Integer> urlDeeps = new HashMap<String, Integer>();//链接的深度
-	private ArrayList<String> waitList =  new ArrayList<String>();//等待的队列
+	private LinkedList<String> waitList =  new LinkedList<String>();//等待的队列
 	private ExecutorService taskPool = Executors.newCachedThreadPool();
 	private String charset = "utf-8";
 	private String domain = "";
 	private int crawlerDeeps = 2;
 	public BaseCrawler(){
-		setDomain("http://lvyou.baidu.com");
-		loadSeedsFromFile();
-		process();
+//		setDomain("http://lvyou.baidu.com");
+//		loadSeedsFromFile();
+//		process();
 //		System.out.println(PageUtil.parseDomain("http://www.oschina.net/p/crawler4j"));
 //		test();
 	}
 	
-	private void process(){
-//		waitList.add("http://www.baidu.com");
-//		waitList.add("http://www.baidu.com/lv");
-//		waitList.add("http://www.baidu.com/tao");
+	/**
+	 * 开始爬取，由外部调用
+	 */
+	public void begin(){
 		for(int i=0; i<TASK_NUM; i++){
 			taskPool.execute(new ProcessThread());
 		}
@@ -50,18 +51,17 @@ public abstract class BaseCrawler {
 	}
 	
 	public synchronized String popList(){
-		String temp = waitList.get(0);
-		waitList.remove(0);
+		String temp = waitList.poll();
 		return temp;
 	}
 	
 	public synchronized void addLink(String url){
-		waitList.add(url);
+		waitList.offer(url);
 	}
 	
-	private void loadSeedsFromFile(){
+	protected void loadSeedsFromFile(String path){
 		try {
-			File file = new File("Seed/seeds.txt");
+			File file = new File(path);
 			FileInputStream inputStream = new FileInputStream(file);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 			String msg = null;
@@ -96,7 +96,7 @@ public abstract class BaseCrawler {
 	}
 	
 	/**
-	 * 设置域名
+	 * 设置域名, 解决相对地址问题
 	 * @param domain
 	 */
 	public void setDomain(String domain){
@@ -140,10 +140,16 @@ public abstract class BaseCrawler {
 					key = this.domain + "/" + key;
 				}
 			}
-			if(!urlDeeps.containsKey(key)){
-				urlDeeps.put(key, urlDeeps.get(sourceUrl) + 1);
-				waitList.add(key);
-				System.out.println(key);
+			try {
+				int sourceDeeps =  urlDeeps.get(sourceUrl);
+				//不在爬过的列表，用户允许访问，且深度小于crawlerDeeps的url加入到等待列表中
+				if(!urlDeeps.containsKey(key) && isAllowVisit(new URL(key)) && (sourceDeeps + 1) <= crawlerDeeps ){
+					urlDeeps.put(key,  sourceDeeps + 1);
+					waitList.add(key);
+					System.out.println(key);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -172,7 +178,7 @@ public abstract class BaseCrawler {
 
 		@Override
 		public void run() {
-			while(!waitList.isEmpty()){
+			while(waitList != null && !waitList.isEmpty()){
 				String urlstr = popList();
 				try {
 					URL url = new URL(urlstr);
@@ -183,12 +189,13 @@ public abstract class BaseCrawler {
 							String pageContent = parse(input);
 							getAllUrlFromPage(urlstr, pageContent);
 							WebPage page = new WebPage(pageContent, url, urlDeeps.get(urlstr));
-							String filename = PageUtil.getFileNameByUrl(urlstr);
-							PageUtil.exportFile("web/"+filename+".txt", pageContent);
+//							String filename = PageUtil.getFileNameByUrl(urlstr);
+//							PageUtil.exportFile("web/"+filename+".txt", pageContent);
 							exactor(page);
 						}
 					}
-					System.out.println("正在处理："+urlstr);
+					System.out.println("正在处理 waitlist:" + waitList.size() + " - total " + urlDeeps.size() + "-" + urlDeeps.get(urlstr) +" ："+urlstr);
+					Thread.sleep(500);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

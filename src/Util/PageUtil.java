@@ -106,9 +106,10 @@ public class PageUtil {
 			FileOutputStream outputStream = new FileOutputStream(new File(dirPath));
 			PrintWriter writer = new PrintWriter(outputStream);
 			writer.write(pageContent);
+			writer.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		} 
 	}
 	
 	public static String getFileNameByUrl(String urlstr){

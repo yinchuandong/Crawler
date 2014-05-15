@@ -7,15 +7,26 @@ import Util.PageUtil;
 
 import Base.BaseCrawler;
 
-public class UiMain extends BaseCrawler{
+public class Baidu extends BaseCrawler{
 	
 	
 	public static void main(String[] args){
-		new UiMain();
+		Baidu baidu = new Baidu();
+		baidu.begin();
+	}
+	
+	
+	//-------------------------------------------
+	public Baidu(){
+		super();
+		this.setDomain("http://lvyou.baidu.com");
+		this.loadSeedsFromFile("Seed/baidu.txt");
 	}
 
 	@Override
 	public void exactor(WebPage page) {
+		String filename = PageUtil.getFileNameByUrl(page.getUrl().toString());
+		PageUtil.exportFile("web/"+filename+".txt", page.getPageContent());
 		System.out.println(page.getUrl().toString());
 	}
 
