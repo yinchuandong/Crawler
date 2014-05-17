@@ -1,2 +1,1 @@
-http://lvyou.baidu.com/shenzhen/jingdian/
-http://lvyou.baidu.com/hunan/jingdian/
+http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&surl=panyu&cid=1&pn=1&t=1400293972516

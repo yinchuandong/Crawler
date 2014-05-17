@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Hashtable;
-public class GetWeb {
+public class GetWebUseless {
 private int webDepth = 2;//爬虫深度
 private int intThreadNum = 10;//线程数
 private String strHomePage = "";//主页地址
@@ -30,8 +30,11 @@ private long startTime;
 private int webSuccessed = 0;
 private int webFailed = 0;
 
-
-public GetWeb(String s)
+/**
+ * 这是一个参照网上的类，暂时没什么用
+ * @param s
+ */
+public GetWebUseless(String s)
 {
    this.strHomePage = s;
 }
@@ -40,7 +43,7 @@ public GetWeb(String s)
  * @param s
  * @param i
  */
-public GetWeb(String s,int i)
+public GetWebUseless(String s,int i)
 {
    this.strHomePage = s;
    this.webDepth = i;
@@ -96,7 +99,7 @@ public synchronized Integer getIntWebIndex()
 */
 public static void main(String[] args)
 {
-	GetWeb gw = new GetWeb("http://lvyou.baidu.com/shenzhen/jingdian/");
+	GetWebUseless gw = new GetWebUseless("http://lvyou.baidu.com/shenzhen/jingdian/");
 	gw.getWebByHomePage();
 //	//输入为空时，打印出No input
 //   if (args.length == 0 || args[0].equals(""))
@@ -302,8 +305,8 @@ public void getUrlByString(String inputArgs,String strUrl)
  */
 class Processer implements Runnable
 {
-     GetWeb gw;
-     public Processer(GetWeb g)
+     GetWebUseless gw;
+     public Processer(GetWebUseless g)
      {
          this.gw = g;
      }

@@ -23,6 +23,11 @@ import javax.security.auth.Subject;
 import Model.WebPage;
 import Util.PageUtil;
 
+/**
+ * 爬取通用html页面的基类
+ * @author yinchuandong
+ *
+ */
 public abstract class BaseCrawler {
 
 	private final static int TASK_NUM = 10;
