@@ -86,6 +86,7 @@ public abstract class BaseCrawler {
 			@Override
 			public void run(){
 				isRunning = true;
+				System.out.println("----------启动线程----------------------");
 				while(!waitList.isEmpty()){
 					String url = popWaitList();
 					taskPool.execute(new ProcessThread(url));
@@ -218,7 +219,7 @@ public abstract class BaseCrawler {
 		
 		@Override
 		public void run() {
-			System.out.println("正在爬取第" + urlDeeps.size() +"个：" + url);
+			System.out.println("正在爬取waitList:" + waitList.size() +" urldeeps:" + urlDeeps.size() +"个：" + url);
 			HttpUtil httpUtil = new HttpUtil();
 			httpUtil.setCharset(charset);
 			String pageContent = httpUtil.get(url);

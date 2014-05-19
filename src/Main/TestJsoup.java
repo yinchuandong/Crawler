@@ -47,7 +47,7 @@ public class TestJsoup {
 	public static void testParseJson(){
 		String result = "";
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader("web/panyu.json"));
+			BufferedReader reader = new BufferedReader(new FileReader("web/guangzhou-1.json"));
 			String str ="";
 			while((str = reader.readLine()) != null){
 				result += str;

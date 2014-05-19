@@ -43,8 +43,8 @@ public class Baidu extends BaseCrawler{
 	}
 	
 	private void init(){
-		String url = this.generateUrl("guangzhou", 1);
-		super.addWaitList(url, 5);
+		String url = this.generateUrl("yangjiang", 1);
+		super.addWaitList(url, 4);
 	}
 	
 	/**
@@ -72,6 +72,10 @@ public class Baidu extends BaseCrawler{
 
 	@Override
 	public void exactor(WebPage page) {
+		if (page == null) {
+			System.err.println("exactor爬取信息为空");
+			return;
+		}
 		String result = page.getPageContent();
 		try {
 			result = AppUtil.jsonFormatter(result);
@@ -114,7 +118,7 @@ public class Baidu extends BaseCrawler{
 			
 			//---------将json文件保存下来-------------------
 			String filename = surl + "-" + currentPage + ".json";
-			PageUtil.exportFile("web/" + filename, AppUtil.jsonFormatter(result));
+			PageUtil.exportFile("E:\\web\\" + filename, AppUtil.jsonFormatter(result));
 			
 		} catch (Exception e) {
 			e.printStackTrace();
