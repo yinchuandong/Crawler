@@ -63,6 +63,12 @@ public abstract class BaseCrawler {
 	 * 延时时间
 	 */
 	private int delay = 500;
+	
+	/**
+	 * 判断爬虫是否正在运行
+	 */
+	private boolean isRunning = false;
+	
 	public BaseCrawler(){
 		urlDeeps = new ConcurrentHashMap<String, Integer>();
 		waitList =  new LinkedList<String>();
@@ -73,14 +79,23 @@ public abstract class BaseCrawler {
 	 * 开始爬取，由外部调用
 	 */
 	public void begin(){
-		taskPool.shutdown();
+		if (isRunning) {
+			return;
+		}
 		new Thread(){
 			@Override
 			public void run(){
+				isRunning = true;
 				while(!waitList.isEmpty()){
 					String url = popWaitList();
 					taskPool.execute(new ProcessThread(url));
+					try {
+						Thread.sleep(delay);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
+				isRunning = false;
 			}
 		}.start();
 	}
@@ -203,6 +218,7 @@ public abstract class BaseCrawler {
 		
 		@Override
 		public void run() {
+			System.out.println("正在爬取第" + urlDeeps.size() +"个：" + url);
 			HttpUtil httpUtil = new HttpUtil();
 			httpUtil.setCharset(charset);
 			String pageContent = httpUtil.get(url);
@@ -214,6 +230,8 @@ public abstract class BaseCrawler {
 				exactor(null);
 				e.printStackTrace();
 			}
+			//再次调用爬虫，避免因解析耗时过多，导致等待队列为空，爬虫停止的情况
+			begin();
 		}
 	}
 	

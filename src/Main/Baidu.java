@@ -43,9 +43,8 @@ public class Baidu extends BaseCrawler{
 	}
 	
 	private void init(){
-		String url = this.generateUrl("panyu", 1);
-		String key = AppUtil.md5(url);
-		super.getUrlDeeps().put(key, 1);
+		String url = this.generateUrl("guangzhou", 1);
+		super.addWaitList(url, 5);
 	}
 	
 	/**
@@ -113,6 +112,9 @@ public class Baidu extends BaseCrawler{
 			JSONArray sceneList = dataObj.getJSONArray("scene_list");
 			parseSceneList(sceneList);
 			
+			//---------将json文件保存下来-------------------
+			String filename = surl + "-" + currentPage + ".json";
+			PageUtil.exportFile("web/" + filename, AppUtil.jsonFormatter(result));
 			
 		} catch (Exception e) {
 			e.printStackTrace();
