@@ -1,8 +1,15 @@
 package Main;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -19,6 +26,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import Util.AppUtil;
+
 /**
  * 用来测试jsoup的解析
  * @author yinchuandong
@@ -28,10 +37,93 @@ public class TestJsoup {
 
 	public static void main(String[] args){
 		
-		testHttpGet();
+//		testHttpGet();
 //		testJsoupUrl();
+		testParseJson();
+	}
+	
+	
+	@SuppressWarnings("unused")
+	public static void testParseJson(){
+		String result = "";
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader("web/panyu.txt"));
+			String str ="";
+			while((str = reader.readLine()) != null){
+				result += str;
+			}
+//			System.out.println(AppUtil.jsonFormatter(result));
+			result = AppUtil.jsonFormatter(result);
+			JSONObject jsonObj = JSONObject.fromObject(result); 
+			JSONObject dataObj = jsonObj.getJSONObject("data");
+			//----需要保存的数据库字段--------------------
+			String sid = dataObj.getString("sid");
+			String surl = dataObj.getString("surl");
+			String sname = dataObj.getString("sname");
+			String ambiguitySname = dataObj.getString("ambiguity_sname");
+			String parentSid = dataObj.getString("parent_sid");
+			String viewCount = dataObj.getString("view_count");
+			String star = dataObj.getString("star");
+			String sceneLayer = dataObj.getString("scene_layer");
+			int goingCount = dataObj.getInt("going_count");
+			int goneCount = dataObj.getInt("gone_count");
+			double rating = dataObj.getDouble("rating");
+			int ratingCount = dataObj.getInt("rating_count");
+			
+			JSONObject extObj = dataObj.getJSONObject("ext");
+			String mapInfo = extObj.getString("map_info");//获得经纬度
+			
+			//------用于判断分页，构造url------------------
+			int sceneTotal = dataObj.getInt("scene_total");
+			int currentPage = dataObj.getInt("current_page");
+			int pageNums = (int) Math.ceil((double)sceneTotal / 16);
+			
+			//-------解析景点列表-----------
+			JSONArray sceneList = dataObj.getJSONArray("scene_list");
+			parseSceneList(sceneList);
+			
+			System.out.println("------------------------------");
+			System.out.println(sceneTotal);
+			System.out.println(rating);
+			System.out.println(sid);
+			
+			reader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
-//		System.out.println(System.currentTimeMillis());
+		
+	}
+	
+	public static void parseSceneList(JSONArray sceneList){
+		for(int i=0; i<sceneList.size(); i++){
+			JSONObject dataObj = sceneList.getJSONObject(i);
+			String sid = dataObj.getString("sid");
+			String surl = dataObj.getString("surl");
+			String sname = dataObj.getString("sname");
+			String ambiguitySname = dataObj.getString("ambiguity_sname");
+			String parentSid = dataObj.getString("parent_sid");
+			String viewCount = dataObj.getString("view_count");
+			String star = dataObj.getString("star");
+			String sceneLayer = dataObj.getString("scene_layer");
+			
+			JSONObject extObj = dataObj.getJSONObject("ext");
+			String mapInfo = extObj.getString("map_info");//获得经纬度
+			int goingCount = extObj.getInt("going_count");
+			int goneCount = extObj.getInt("gone_count");
+			System.out.println(sid);
+			System.out.println(surl);
+			System.out.println(sname);
+			System.out.println(generateUrl(surl, 1, 1));
+			System.out.println("------------------------------");
+		}
+		
+	}
+	
+	public static String generateUrl(String city, int cid, int page){
+		String url = "http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&";
+		url  += "surl=" + city+ "&cid=1&pn=" + page +"&t=" + System.currentTimeMillis();
+		return url;
 	}
 	
 	/**

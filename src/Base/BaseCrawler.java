@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -21,6 +23,8 @@ import java.util.regex.Pattern;
 import javax.security.auth.Subject;
 
 import Model.WebPage;
+import Util.AppUtil;
+import Util.HttpUtil;
 import Util.PageUtil;
 
 /**
@@ -31,39 +35,89 @@ import Util.PageUtil;
 public abstract class BaseCrawler {
 
 	private final static int TASK_NUM = 10;
-	private HashMap<String, Integer> urlDeeps = new HashMap<String, Integer>();//链接的深度
-	private LinkedList<String> waitList =  new LinkedList<String>();//等待的队列
-	private ExecutorService taskPool = Executors.newCachedThreadPool();
+	/**
+	 * 保存爬过的Url和深度，key是url的md5值，value是深度值
+	 */
+	private ConcurrentHashMap<String, Integer> urlDeeps;
+	/**
+	 * 等待的队列
+	 */
+	private LinkedList<String> waitList;
+	/**
+	 * 线程池
+	 */
+	private ExecutorService taskPool;
+	/**
+	 * 网页的字符编码
+	 */
 	private String charset = "utf-8";
+	/**
+	 * 网页的域名，如：http://lvyou.baidu.com
+	 */
 	private String domain = "";
+	/**
+	 * 爬虫最大的深度
+	 */
 	private int crawlerDeeps = 2;
+	/**
+	 * 延时时间
+	 */
+	private int delay = 500;
 	public BaseCrawler(){
-//		setDomain("http://lvyou.baidu.com");
-//		loadSeedsFromFile();
-//		process();
-//		System.out.println(PageUtil.parseDomain("http://www.oschina.net/p/crawler4j"));
-//		test();
+		urlDeeps = new ConcurrentHashMap<String, Integer>();
+		waitList =  new LinkedList<String>();
+		taskPool = Executors.newCachedThreadPool();
 	}
 	
 	/**
 	 * 开始爬取，由外部调用
 	 */
 	public void begin(){
-		for(int i=0; i<TASK_NUM; i++){
-			taskPool.execute(new ProcessThread());
-		}
 		taskPool.shutdown();
+		new Thread(){
+			@Override
+			public void run(){
+				while(!waitList.isEmpty()){
+					String url = popWaitList();
+					taskPool.execute(new ProcessThread(url));
+				}
+			}
+		}.start();
 	}
 	
-	public synchronized String popList(){
+	/**
+	 * 将waitList的头结点弹出
+	 * @return
+	 */
+	public synchronized String popWaitList(){
 		String temp = waitList.poll();
 		return temp;
 	}
 	
-	public synchronized void addLink(String url){
+	/**
+	 * 添加一个url到waitList
+	 * @param url
+	 * @param deeps
+	 */
+	public synchronized void addWaitList(String url, int deeps){
 		waitList.offer(url);
+		String key = AppUtil.md5(url);
+		urlDeeps.put(key, deeps);
 	}
 	
+	
+	/**
+	 * 获得已经爬取过的url深度列表，key是url的md5值，value是深度值
+	 * @return
+	 */
+	public ConcurrentHashMap<String, Integer> getUrlDeeps(){
+		return this.urlDeeps;
+	}
+	
+	/**
+	 * 添加爬虫起始种子
+	 * @param path
+	 */
 	protected void loadSeedsFromFile(String path){
 		try {
 			File file = new File(path);
@@ -72,7 +126,7 @@ public abstract class BaseCrawler {
 			String msg = null;
 			while((msg = reader.readLine()) != null){
 				waitList.add(msg);
-				urlDeeps.put(msg, 1);//种子的深度为1
+				urlDeeps.put(AppUtil.md5(msg), 1);//种子的深度为1
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -86,12 +140,7 @@ public abstract class BaseCrawler {
 	 * @param webPage
 	 */
 	public abstract void exactor(WebPage webPage);
-	/**
-	 * 设置url的过滤规则
-	 * @param url
-	 * @return
-	 */
-	public abstract boolean isAllowVisit(URL url);
+	
 	/**
 	 * 设置字符集
 	 * @param charset
@@ -118,46 +167,7 @@ public abstract class BaseCrawler {
 		}
 	}
 	
-	public void test(){
-		String test = "<a href=\"/pictravel1/\" class=\"nav-link nslog\"> \r\n" +
-				"<a href=\"/pictravel2/\" class=\"nav-link nslog\">";
-		Pattern pattern = Pattern.compile("href=[\"|\']([^#]*?)[\"|\']",Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(test);
-		while(matcher.find()) {
-			System.out.println(matcher.group(1));
-		}
-	}
-	
 	/**
-	 * 从页面中提取所有的url，并记录其deepth
-	 * @param sourceUrl
-	 * @param pageContent
-	 */
-	public synchronized void getAllUrlFromPage(String sourceUrl, String pageContent){
-		Pattern pattern = Pattern.compile("href=[\"|\']([^#]*?)[\"|\']",Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(pageContent);
-		while(matcher.find()) {
-			String key = matcher.group(1);//匹配出url
-			if (PageUtil.parseDomain(key) == null) {
-				if(key.startsWith("/")){
-					key = this.domain + key;
-				}else{
-					key = this.domain + "/" + key;
-				}
-			}
-			try {
-				int sourceDeeps =  urlDeeps.get(sourceUrl);
-				//不在爬过的列表，用户允许访问，且深度小于crawlerDeeps的url加入到等待列表中
-				if(!urlDeeps.containsKey(key) && isAllowVisit(new URL(key)) && (sourceDeeps + 1) <= crawlerDeeps ){
-					urlDeeps.put(key,  sourceDeeps + 1);
-					waitList.add(key);
-					System.out.println(key);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
 	
 	
 	/**
@@ -179,31 +189,30 @@ public abstract class BaseCrawler {
 	}
 	
 	
+	/**
+	 * 具体爬取的线程
+	 * @author yinchuandong
+	 *
+	 */
 	public class ProcessThread implements Runnable{
 
+		private String url;
+		public ProcessThread(String url){
+			this.url = url;
+		}
+		
 		@Override
 		public void run() {
-			while(waitList != null && !waitList.isEmpty()){
-				String urlstr = popList();
-				try {
-					URL url = new URL(urlstr);
-					if(isAllowVisit(url)){
-						if(urlDeeps.get(urlstr) <= crawlerDeeps){
-							URLConnection conn = url.openConnection();
-							InputStream input = conn.getInputStream();
-							String pageContent = parse(input);
-							getAllUrlFromPage(urlstr, pageContent);
-							WebPage page = new WebPage(pageContent, url, urlDeeps.get(urlstr));
-//							String filename = PageUtil.getFileNameByUrl(urlstr);
-//							PageUtil.exportFile("web/"+filename+".txt", pageContent);
-							exactor(page);
-						}
-					}
-					System.out.println("正在处理 waitlist:" + waitList.size() + " - total " + urlDeeps.size() + "-" + urlDeeps.get(urlstr) +" ："+urlstr);
-					Thread.sleep(500);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			HttpUtil httpUtil = new HttpUtil();
+			httpUtil.setCharset(charset);
+			String pageContent = httpUtil.get(url);
+			WebPage webPage;
+			try {
+				webPage = new WebPage(pageContent, new URL(url), urlDeeps.get(AppUtil.md5(url)));
+				exactor(webPage);
+			} catch (MalformedURLException e) {
+				exactor(null);
+				e.printStackTrace();
 			}
 		}
 	}
