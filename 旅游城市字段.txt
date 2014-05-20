@@ -1,0 +1,13 @@
+"sid": "bd47bc1a34e1c43404a652f8", //景点的id
+"surl": "changlonghuanleshijie", //景点的拼音
+"sname": "长隆欢乐世界", 
+"parent_sid": "622bc401f1153f0fd41f74dd", 
+"view_count": "557800", //访问量
+"star": "5", //星级
+"scene_layer": "6",//归属层次 
+"ambiguity_sname": "长隆欢乐世界",//模糊名字 
+"going_count": 650, //想去的人数
+"gone_count": 435, //去过的人数
+"rating": 5, //评分
+"rating_count": 425,//评分数量 
+"map_info": "113.339063,23.008872",//经纬度

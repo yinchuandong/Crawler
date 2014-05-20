@@ -114,7 +114,7 @@ public class Baidu extends BaseCrawler{
 			
 			//---------将json文件保存下来-------------------
 			String filename = surl + "-" + currentPage + ".json";
-			PageUtil.exportFile("web/" + filename, AppUtil.jsonFormatter(result));
+			PageUtil.exportFile("F:\\web\\" + filename, AppUtil.jsonFormatter(result));
 			
 		} catch (Exception e) {
 			e.printStackTrace();

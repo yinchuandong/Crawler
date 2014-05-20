@@ -59,7 +59,7 @@ public class AppUtil {
 	 * @return
 	 */
 	public static HashMap<String, String> parseUrlQuey(URL url){
-		HashMap<String, String> result = new HashMap<>();
+		HashMap<String, String> result = new HashMap<String, String>();
 		String[] rowArr = url.getQuery().split("&");
 		for (String param : rowArr) {
 			String[] paramArr = param.split("=");
