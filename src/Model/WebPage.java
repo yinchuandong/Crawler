@@ -12,6 +12,11 @@ public class WebPage {
 		
 	}
 	
+	public WebPage(String pageContent, URL url){
+		setPageContent(pageContent);
+		setUrl(url);
+	}
+	
 	public WebPage(String pageContent, URL url, int layer){
 		setPageContent(pageContent);
 		setUrl(url);

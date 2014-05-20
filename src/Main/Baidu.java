@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.sf.json.JSONArray;
@@ -12,6 +14,7 @@ import net.sf.json.JSONObject;
 
 import Model.WebPage;
 import Util.AppUtil;
+import Util.DbUtil;
 import Util.PageUtil;
 
 import Base.BaseCrawler;
@@ -33,18 +36,26 @@ public class Baidu extends BaseCrawler{
 	 * 每一页景点的数量
 	 */
 	private int listRows = 16;
+	/**
+	 * 当前的时间戳
+	 */
+	private long timestamp ;
 	
 	//-------------------------------------------
 	public Baidu(){
 		super();
+		this.timestamp = System.currentTimeMillis();
 		this.setDomain("http://lvyou.baidu.com");
-//		this.loadSeedsFromFile("Seed/baidu.txt");
 		this.init();
 	}
 	
 	private void init(){
-		String url = this.generateUrl("yangjiang", 1);
-		super.addWaitList(url, 4);
+		String url = this.generateUrl("guangzhou", 1);
+		super.addWaitList(url);
+		
+		String uniqueKey = "guangzhou-1";
+		super.addUnVisitPath(uniqueKey);
+		
 	}
 	
 	/**
@@ -56,7 +67,7 @@ public class Baidu extends BaseCrawler{
 	 */
 	public String generateUrl(String surl, int cid, int page){
 		String url = "http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&";
-		url  += "surl=" + surl+ "&cid=1&pn=" + page +"&t=" + System.currentTimeMillis();
+		url  += "surl=" + surl+ "&cid=" + cid + "&pn=" + page + "&t=" + this.timestamp;
 		return url;
 	}
 	
@@ -68,6 +79,26 @@ public class Baidu extends BaseCrawler{
 	 */
 	public String generateUrl(String surl, int page){
 		return this.generateUrl(surl, 1, page);
+	}
+	
+	@Override
+	public void loadWaitList() {
+		ResultSet resultSet = DbUtil.executeQuery("select sname from t_crawled where isVisited=?", new String[]{"0"});
+		try {
+			while(resultSet.next()){
+				String sname = resultSet.getString("sname");
+				String[] arr =sname.split("-");
+				if (arr.length >=2 ) {
+					String surl = arr[0];
+					int page = Integer.parseInt(arr[1]);
+					String url = generateUrl(surl, page);
+					addWaitList(url);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	@Override
@@ -101,20 +132,27 @@ public class Baidu extends BaseCrawler{
 			int sceneTotal = dataObj.getInt("scene_total");
 			int currentPage = dataObj.getInt("current_page");
 			
-			ConcurrentHashMap<String, Integer> urlDeeps = super.getUrlDeeps();
+			//--------------将url标记为已经访问----------------------------
+			super.visitUrl(surl + "-" + currentPage);
+			
 			//取得页数
 			int pageNums = (int) Math.ceil((double)sceneTotal / listRows);
 			for(int i=currentPage+1; i<=pageNums; i++){
-				String tmpUrl = this.generateUrl(surl, i);
 				//如果该url没有被访问过，则添加到未访问列表中
-				if (!urlDeeps.containsKey(AppUtil.md5(tmpUrl))) {
-					super.addWaitList(tmpUrl, Integer.parseInt(sceneLayer));
+				String uniqueKey = surl + "-" + i;
+				String uniqueSid = AppUtil.md5(uniqueKey);
+				int count = DbUtil.count("select count(*) from t_crawled where sid=?", new String[]{uniqueSid});
+				if (count < 1) {
+					//添加到等待队列
+					String tmpUrl = this.generateUrl(surl, i);
+					addWaitList(tmpUrl);
+					addUnVisitPath(uniqueKey);
 				}
 			}
 			
 			//-------解析景点列表-----------
 			JSONArray sceneList = dataObj.getJSONArray("scene_list");
-			parseSceneList(sceneList);
+			this.parseSceneList(sceneList);
 			
 			//---------将json文件保存下来-------------------
 			String filename = surl + "-" + currentPage + ".json";
@@ -130,7 +168,6 @@ public class Baidu extends BaseCrawler{
 	 * @param sceneList
 	 */
 	private void parseSceneList(JSONArray sceneList){
-		ConcurrentHashMap<String, Integer> urlDeeps = super.getUrlDeeps();
 		for(int i=0; i<sceneList.size(); i++){
 			JSONObject sceneObj = sceneList.getJSONObject(i);
 			String sid = sceneObj.getString("sid");
@@ -138,20 +175,23 @@ public class Baidu extends BaseCrawler{
 			String sname = sceneObj.getString("sname");
 			String sceneLayer = sceneObj.getString("scene_layer");
 			
-			String crawlUrl = this.generateUrl(surl, 1);
 			//如果该url没有被访问过，则添加到未访问列表中
-			if (!urlDeeps.containsKey(AppUtil.md5(crawlUrl))) {
-				super.addWaitList(crawlUrl, Integer.parseInt(sceneLayer));
+			String uniqueKey = surl + "-" + 1;
+			String uniqueSid = AppUtil.md5(uniqueKey);
+			int count = DbUtil.count("select count(*) from t_crawled where sid=?", new String[]{uniqueSid});
+			if (count < 1) {
+				//添加到等待队列
+				String tmpUrl = this.generateUrl(surl, 1);
+				addWaitList(tmpUrl);
+				addUnVisitPath(uniqueKey);
 			}
+			
 			System.out.println(sid);
 			System.out.println(surl);
 			System.out.println(sname);
-			System.out.println(generateUrl(surl, 1, 1));
 			System.out.println("------------------------------");
 		}
 		
 	}
-	
-	
 
 }
