@@ -55,7 +55,7 @@ public class DbUtil {
 			com.mysql.jdbc.Driver jdbcDriver = new com.mysql.jdbc.Driver();
 			DriverManager.registerDriver(jdbcDriver);
 			
-			String dbUrl = "jdbc:mysql://127.0.0.1:3306/travel";
+			String dbUrl = "jdbc:mysql://192.168.233.21:3306/travel";
 			String dbUser = "root";
 			String dbPwd = "";
 			conn = DriverManager.getConnection(dbUrl, dbUser, dbPwd);
