@@ -2,9 +2,12 @@
 ## Eclipse
 #################
 
+<<<<<<< HEAD
 *.pydevproject
 .project
 .metadata
+=======
+>>>>>>> master
 bin/
 tmp/
 *.tmp
