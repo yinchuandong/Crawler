@@ -30,7 +30,7 @@ public class Baidu extends BaseCrawler{
 	
 	public static void main(String[] args){
 		Baidu baidu = new Baidu();
-//		baidu.begin();
+		baidu.begin();
 	}
 	
 	/**
