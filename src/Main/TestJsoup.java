@@ -167,25 +167,25 @@ public class TestJsoup {
 	@SuppressWarnings("deprecation")
 	public static void testHttpGet(){
 //		String url = "http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&surl=panyu&cid=1&pn=1&t=" + System.currentTimeMillis();
-		String url2 = "http://lvyou.baidu.com/guangzhoubaiyunshan/";
-//		String url2 = "http://www.mafengwo.cn/hotel/s.php?sKeyWord=%E5%B9%BF%E5%B7%9E&sCheckIn=2014-07-04&sCheckOut=2014-07-05";
+//		String url2 = "http://lvyou.baidu.com/guangzhoubaiyunshan/";
+		String url2 = "http://www.mafengwo.cn/hotel/s.php?sKeyWord=%E5%B9%BF%E5%B7%9E&sCheckIn=2014-07-04&sCheckOut=2014-07-05";
 		DefaultHttpClient client = new DefaultHttpClient();
-//		client.setRedirectStrategy(new RedirectStrategy() {
-//			
-//			@Override
-//			public boolean isRedirected(HttpRequest arg0, HttpResponse arg1,
-//					HttpContext arg2) throws ProtocolException {
-//				// TODO Auto-generated method stub
-//				return false;
-//			}
-//			
-//			@Override
-//			public HttpUriRequest getRedirect(HttpRequest arg0, HttpResponse arg1,
-//					HttpContext arg2) throws ProtocolException {
-//				// TODO Auto-generated method stub
-//				return null;
-//			}
-//		});
+		client.setRedirectStrategy(new RedirectStrategy() {
+			
+			@Override
+			public boolean isRedirected(HttpRequest arg0, HttpResponse arg1,
+					HttpContext arg2) throws ProtocolException {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public HttpUriRequest getRedirect(HttpRequest arg0, HttpResponse arg1,
+					HttpContext arg2) throws ProtocolException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
 		
 		HttpGet httpGet = new HttpGet(url2);
 		try {
