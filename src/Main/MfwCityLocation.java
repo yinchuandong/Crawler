@@ -1,6 +1,11 @@
 package Main;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.LinkedList;
 
 import org.apache.http.Header;
 import org.apache.http.HttpRequest;
@@ -16,15 +21,64 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-public class Mafengwo {
+/**
+ * 通过城市的名字，获得城市的id
+ * @author yinchuandong
+ *
+ */
+public class MfwCityLocation {
 
+	
+	private LinkedList<String> cityList;
+	
+	public MfwCityLocation(){
+		cityList = new LinkedList<String>();
+	}
+	
+	public void loadData(String fileName) throws IOException{
+		BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
+		String buff = "";
+		while((buff = reader.readLine()) != null){
+			cityList.add(buff);
+		}
+		reader.close();
+	}
+	
+	public void runTask(final String fileName){
+		new Thread(){
+			@Override
+			public void run(){
+				try {
+					PrintWriter writer = new PrintWriter(new File(fileName));
+					while(cityList.size() != 0){
+						String city = cityList.poll();
+						String cityId = getCityId(city);
+						if (cityId.equals("") || cityId.length() != 5) {
+							System.out.println("错误：----" + city + " " + cityId);
+							continue;
+						}
+						String buff = city + " " + cityId + "\r\n";
+						System.out.print(buff);
+						writer.write(buff);
+						writer.flush();
+						Thread.sleep(500);
+					}
+					writer.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
+	}
+	
 	/**
 	 * 测试apache get方法打开Url
 	 * 解决中文乱码
 	 */
 	@SuppressWarnings("deprecation")
-	public static void getCityId(String cityName){
+	public String getCityId(String cityName){
 		String url = "http://www.mafengwo.cn/hotel/s.php?sKeyWord="+cityName+"&sCheckIn=2014-07-28&sCheckOut=2014-07-29";
+		String result = "";
 		DefaultHttpClient client = new DefaultHttpClient();
 		client.setRedirectStrategy(new RedirectStrategy() {
 			@Override
@@ -44,39 +98,43 @@ public class Mafengwo {
 		});
 		
 		HttpGet httpGet = new HttpGet(url);
-//		httpGet.setHeader("Host", "www.mafengwo.cn");
+		httpGet.setHeader("Host", "www.mafengwo.cn");
 		httpGet.setHeader("Referer", "http://www.mafengwo.cn/hotel/");
 		httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36"); 
 		try {
 			HttpResponse response = client.execute(httpGet);
 			int status = response.getStatusLine().getStatusCode();
 			if (status == HttpStatus.SC_OK) {
-				String result = EntityUtils.toString(response.getEntity());
+				System.out.println("没有该城市: --- " + cityName);
+				return "";
+//				String data = EntityUtils.toString(response.getEntity());
 				//解决中文乱码
 //				String test = new String(result.getBytes("ISO-8859-1"), 0, result.length(), "utf-8");
 //				String test = new String(result.getBytes("gbk"), 0, result.length(), "utf-8");
-
-				Header[] headers = response.getAllHeaders();
-				System.out.println(result);
-				System.out.println("ok?");
 			}else{
-				System.out.println("页面没有返回");
+//				System.out.println("页面没有返回");
 				Header[] headers = response.getHeaders("Location");
-				System.out.println(headers[0].getValue());
+				String location = headers[0].getValue();
+				String cityId = location.replaceAll("(/\\w*?/)|(/)", "");
+				result = cityId;
 			}
 		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally{
 			httpGet.releaseConnection();
 		}
+		return result;
 	}
 	
 	
-	public static void main(String[] args){
-		getCityId("深圳");
+	public static void main(String[] args) throws IOException{
+		MfwCityLocation model = new MfwCityLocation();
+		model.loadData("./Seed/mfw-city.txt");
+		model.runTask("./Seed/mfw-city-id.txt");
+//		String location = "/hotel/10083/";
+//		String cityId = location.replaceAll("(/\\w*?/)|(/)", "");
+//		System.out.println(cityId);
 	}
 }
