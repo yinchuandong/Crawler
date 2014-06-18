@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.jsoup.Jsoup;
@@ -43,27 +44,109 @@ public class MfwParser {
 			Element hAddress = hItem.select(".address").get(0);
 			String address = hAddress.text().replaceAll("[\r\n]", "");
 			
-			//价格
-			Elements hPriceBox = hItem.select(".btn-booking");
-			for (Element priceBox : hPriceBox) {
-				String dataUrl = priceBox.attr("data-url");
-				if (dataUrl.equals("")) {
-					continue;
-				}
+			//价格,默认第一个为最低价格
+			Element priceBox = hItem.select(".btn-booking").get(0);
+			String dataUrl = priceBox.attr("data-url");
+			String jurl = "";
+			String otaname = "";
+			String price = "0";
+			if (!dataUrl.equals("")) {
 				dataUrl = "http://www.mafengwo.cn" + dataUrl;
 				HashMap<String, String> params = UrlParmUtil.parseUrl(dataUrl);
-				String jurl = params.get("j");
+				jurl = params.get("j");
 				jurl = URLDecoder.decode(jurl);
-				String otaname = priceBox.select("em.t").get(0).text();
-				String price = priceBox.select("em.p ._j_price").get(0).text();
+				otaname = priceBox.select("em.t").get(0).text();
+				price = priceBox.select("em.p ._j_price").get(0).text();
 				System.out.println(otaname + " " + price + " " + jurl);
 			}
+			
+			Hotel hotel = new Hotel();
+			hotel.setName(name);
+			hotel.setLat(lat);
+			hotel.setLng(lng);
+			hotel.setImgSrc(imgSrc);
+			hotel.setSummary(summary);
+			hotel.setAddress(address);
+			hotel.setBookUrl(jurl);
+			hotel.setOtaname(otaname);
+			hotel.setPrice(price);
+			
 		}
 //		System.out.println(html);
 	}
 	
+	public class Hotel{
+		private String name;
+		private String lat;
+		private String lng;
+		private String summary;
+		private String imgSrc;
+		private String address;
+		private String otaname;//预订的网站，如：携程网等
+		private String price;
+		private String bookUrl;
+		
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public String getLat() {
+			return lat;
+		}
+		public void setLat(String lat) {
+			this.lat = lat;
+		}
+		public String getLng() {
+			return lng;
+		}
+		public void setLng(String lng) {
+			this.lng = lng;
+		}
+		public String getSummary() {
+			return summary;
+		}
+		public void setSummary(String summary) {
+			this.summary = summary;
+		}
+		public String getImgSrc() {
+			return imgSrc;
+		}
+		public void setImgSrc(String imgSrc) {
+			this.imgSrc = imgSrc;
+		}
+		public String getAddress() {
+			return address;
+		}
+		public void setAddress(String address) {
+			this.address = address;
+		}
+		public String getOtaname() {
+			return otaname;
+		}
+		public void setOtaname(String otaname) {
+			this.otaname = otaname;
+		}
+		public String getPrice() {
+			return price;
+		}
+		public void setPrice(String price) {
+			this.price = price;
+		}
+		public String getBookUrl() {
+			return bookUrl;
+		}
+		public void setBookUrl(String bookUrl) {
+			this.bookUrl = bookUrl;
+		}
+		
+		
+	}
+	
+	
 	public static void main(String[] args) throws IOException{
 		MfwParser model = new MfwParser();
-		model.parse("E:\\hotel\\34888-1.txt");
+		model.parse("E:\\hotel\\10088-1.txt");
 	}
 }
