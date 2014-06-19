@@ -2,6 +2,7 @@ package Parser;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -20,13 +21,44 @@ import net.sf.json.JSONObject;
 
 public class MfwParser {
 
+	private HashMap<String, String> cityMap;
 	
-	private void parse(String fileName) throws IOException{
-		String content = PageUtil.readFile(new File(fileName));
+	public MfwParser(){
+		cityMap = new HashMap<String, String>();
+	}
+	
+	private void init(){
+		
+	}
+	
+	/**
+	 * 从文件中加载cityId-cityName的映射
+	 * @param fileName
+	 * @throws IOException
+	 */
+	public void loadCity(String fileName) throws IOException{
+		BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
+		String buff = null;
+		while((buff = reader.readLine()) != null){
+			String arr[] = buff.split("\\s");
+			String cityName = arr[0];
+			String cityId = arr[1];
+			cityMap.put(cityId, cityName);
+		}
+		reader.close();
+	}
+	
+	private void parse(File file) throws IOException{
+		String content = PageUtil.readFile(file);
 		JSONObject jsonObject = JSONObject.fromObject(content);
 		String html = jsonObject.getString("html");
 		Document document = Jsoup.parse(html);
 		Elements hItems = document.select(".h-item");
+		
+		String[] extArr = file.getName().split("-");
+		String cityId = extArr[0];
+		String cityName = cityMap.get(cityId);
+		
 		for (Element hItem : hItems) {
 			//名称和坐标
 			String name = hItem.attr("data-name");
@@ -41,35 +73,40 @@ public class MfwParser {
 			String summary = hSummary.get(0).text();
 			
 			//地址
-			Element hAddress = hItem.select(".address").get(0);
-			String address = hAddress.text().replaceAll("[\r\n]", "");
+			Element hAddress = hItem.select(".address p").get(0);
+			String address = hAddress.attr("title");
 			
 			//价格,默认第一个为最低价格
-			Element priceBox = hItem.select(".btn-booking").get(0);
-			String dataUrl = priceBox.attr("data-url");
 			String jurl = "";
 			String otaname = "";
 			String price = "0";
-			if (!dataUrl.equals("")) {
-				dataUrl = "http://www.mafengwo.cn" + dataUrl;
-				HashMap<String, String> params = UrlParmUtil.parseUrl(dataUrl);
-				jurl = params.get("j");
-				jurl = URLDecoder.decode(jurl);
-				otaname = priceBox.select("em.t").get(0).text();
-				price = priceBox.select("em.p ._j_price").get(0).text();
-				System.out.println(otaname + " " + price + " " + jurl);
+			
+			Elements hPriceBox = hItem.select(".btn-booking");
+			if (hPriceBox != null && hPriceBox.size() != 0) {
+				Element priceBox = hPriceBox.get(0);
+				String dataUrl = priceBox.attr("data-url");
+				if (!dataUrl.equals("")) {
+					dataUrl = "http://www.mafengwo.cn" + dataUrl;
+					HashMap<String, String> params = UrlParmUtil.parseUrl(dataUrl);
+					jurl = params.get("j");
+					jurl = URLDecoder.decode(jurl);
+					otaname = priceBox.select("em.t").get(0).text();
+					price = priceBox.select("em.p ._j_price").get(0).text();
+				}
 			}
 			
-			Hotel hotel = new Hotel();
-			hotel.setName(name);
-			hotel.setLat(lat);
-			hotel.setLng(lng);
-			hotel.setImgSrc(imgSrc);
-			hotel.setSummary(summary);
-			hotel.setAddress(address);
-			hotel.setBookUrl(jurl);
-			hotel.setOtaname(otaname);
-			hotel.setPrice(price);
+			System.out.println(otaname + " " + price + " " + jurl);
+			
+//			Hotel hotel = new Hotel();
+//			hotel.setName(name);
+//			hotel.setLat(lat);
+//			hotel.setLng(lng);
+//			hotel.setImgSrc(imgSrc);
+//			hotel.setSummary(summary);
+//			hotel.setAddress(address);
+//			hotel.setBookUrl(jurl);
+//			hotel.setOtaname(otaname);
+//			hotel.setPrice(price);
 			
 		}
 //		System.out.println(html);
@@ -147,6 +184,7 @@ public class MfwParser {
 	
 	public static void main(String[] args) throws IOException{
 		MfwParser model = new MfwParser();
-		model.parse("E:\\hotel\\10088-1.txt");
+		model.loadCity("./Seed/mfw-city-id.txt");
+		model.parse(new File("E:\\hotel\\10088-1.txt"));
 	}
 }
