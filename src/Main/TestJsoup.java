@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Driver;
+import java.sql.DriverManager;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -26,6 +28,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+
 import Util.AppUtil;
 
 /**
@@ -43,11 +46,14 @@ public class TestJsoup {
 	}
 	
 	
+	/**
+	 * 测试解析Json
+	 */
 	@SuppressWarnings("unused")
 	public static void testParseJson(){
 		String result = "";
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader("web/panyu.json"));
+			BufferedReader reader = new BufferedReader(new FileReader("E:\\json\\baguangcun-1.json"));
 			String str ="";
 			while((str = reader.readLine()) != null){
 				result += str;
@@ -83,9 +89,20 @@ public class TestJsoup {
 			parseSceneList(sceneList);
 			
 			System.out.println("------------------------------");
+			System.out.println(sid);
+			System.out.println(surl);
+			System.out.println(sname);
+			System.out.println(ambiguitySname);
+			System.out.println(parentSid);
+			System.out.println(viewCount);
+			System.out.println(star);
+			System.out.println(sceneLayer);
+			System.out.println(goingCount);
+			System.out.println(goneCount);
 			System.out.println(sceneTotal);
 			System.out.println(rating);
-			System.out.println(sid);
+			System.out.println(ratingCount);
+			System.out.println(mapInfo);
 			
 			reader.close();
 		} catch (Exception e) {
@@ -95,6 +112,10 @@ public class TestJsoup {
 		
 	}
 	
+	/**
+	 * 解析旅游json 的scene_list部分
+	 * @param sceneList
+	 */
 	public static void parseSceneList(JSONArray sceneList){
 		for(int i=0; i<sceneList.size(); i++){
 			JSONObject dataObj = sceneList.getJSONObject(i);
@@ -122,7 +143,7 @@ public class TestJsoup {
 	
 	public static String generateUrl(String city, int cid, int page){
 		String url = "http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&";
-		url  += "surl=" + city+ "&cid=1&pn=" + page +"&t=" + System.currentTimeMillis();
+		url  += "surl=" + city+ "&cid=1&pn=" + page +"&t=1400550956830";
 		return url;
 	}
 	

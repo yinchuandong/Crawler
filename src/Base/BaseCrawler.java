@@ -10,6 +10,8 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -20,10 +22,12 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.print.attribute.standard.Sides;
 import javax.security.auth.Subject;
 
 import Model.WebPage;
 import Util.AppUtil;
+import Util.DbUtil;
 import Util.HttpUtil;
 import Util.PageUtil;
 
@@ -82,10 +86,12 @@ public abstract class BaseCrawler {
 		if (isRunning) {
 			return;
 		}
+		loadWaitList();
 		new Thread(){
 			@Override
 			public void run(){
 				isRunning = true;
+				System.out.println("----------启动线程----------------------");
 				while(!waitList.isEmpty()){
 					String url = popWaitList();
 					taskPool.execute(new ProcessThread(url));
@@ -114,10 +120,33 @@ public abstract class BaseCrawler {
 	 * @param url
 	 * @param deeps
 	 */
-	public synchronized void addWaitList(String url, int deeps){
+	public synchronized void addWaitList(String url){
 		waitList.offer(url);
-		String key = AppUtil.md5(url);
-		urlDeeps.put(key, deeps);
+//		String key = AppUtil.md5(url);
+//		urlDeeps.put(key, deeps);
+	}
+	
+	/**
+	 * 将url添加到未访问的列表
+	 * 存入mysql数据库中
+	 * @param uniqueKey 如:guangzhou-1
+	 */
+	public synchronized void addUnVisitPath(String uniqueKey){
+		String sid = AppUtil.md5(uniqueKey);
+		String sql = "insert into t_crawled (sid,sname,isVisited) values (?,?,?)";
+		DbUtil.executeUpdate(sql, new String[]{sid, uniqueKey, "0"});
+	}
+	
+	/**
+	 * 将该url标记为已经访问过
+	 * @param uniqueKey 能唯一标示Url的，
+	 * 如http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&cid=1&pn=2
+	 * 则uniqueKey为baiyunshan-2的md5值
+	 */
+	public synchronized void visitUrl(String uniqueKey){
+		String sid = AppUtil.md5(uniqueKey);
+		String sql = "update t_crawled set isVisited='1' where sid=?";
+		DbUtil.executeUpdate(sql, new String[]{sid});
 	}
 	
 	
@@ -130,31 +159,15 @@ public abstract class BaseCrawler {
 	}
 	
 	/**
-	 * 添加爬虫起始种子
-	 * @param path
-	 */
-	protected void loadSeedsFromFile(String path){
-		try {
-			File file = new File(path);
-			FileInputStream inputStream = new FileInputStream(file);
-			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-			String msg = null;
-			while((msg = reader.readLine()) != null){
-				waitList.add(msg);
-				urlDeeps.put(AppUtil.md5(msg), 1);//种子的深度为1
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	
-	/**
 	 * 执行完爬虫之后的回调函数
 	 * @param webPage
 	 */
 	public abstract void exactor(WebPage webPage);
+	
+	/**
+	 * 加载等待队列
+	 */
+	public abstract void loadWaitList();
 	
 	/**
 	 * 设置字符集
@@ -182,26 +195,6 @@ public abstract class BaseCrawler {
 		}
 	}
 	
-	/**
-	
-	
-	/**
-	 * 把inputstream转为string类型
-	 * @param inputStream
-	 * @return
-	 * @throws IOException
-	 */
-	private String parse(InputStream inputStream) throws IOException {
-		StringBuffer buffer = new StringBuffer();
-		String result = "";
-		String msg = null;
-		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,charset));
-		while((msg = reader.readLine()) != null ){
-			buffer.append(msg + "\r\n");
-		}
-		result = buffer.toString();
-		return result;
-	}
 	
 	
 	/**
@@ -218,13 +211,13 @@ public abstract class BaseCrawler {
 		
 		@Override
 		public void run() {
-			System.out.println("正在爬取第" + urlDeeps.size() +"个：" + url);
+			System.out.println("正在爬取waitList:" + waitList.size() + "个：" + url);
 			HttpUtil httpUtil = new HttpUtil();
 			httpUtil.setCharset(charset);
 			String pageContent = httpUtil.get(url);
 			WebPage webPage;
 			try {
-				webPage = new WebPage(pageContent, new URL(url), urlDeeps.get(AppUtil.md5(url)));
+				webPage = new WebPage(pageContent, new URL(url));
 				exactor(webPage);
 			} catch (MalformedURLException e) {
 				exactor(null);
