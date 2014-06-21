@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -116,6 +117,34 @@ public class PageUtil {
 		String filename = urlstr.replaceAll("http\\://", "");
 		filename = filename.replaceAll("/", "-").substring(0, filename.length()-1);
 		return filename;
+	}
+	
+	/**
+	 * ¶ÁÈ¡ÎÄ¼þ
+	 * @param file
+	 * @return
+	 */
+	public static String readFile(File file){
+		String result = "";
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+			String tmp = "";
+			while((tmp = reader.readLine()) != null){
+				result += tmp;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally{
+			try {
+				if (reader != null) {
+					reader.close();
+				}
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}
+		return result;
 	}
 	
 }

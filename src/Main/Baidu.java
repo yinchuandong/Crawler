@@ -1,6 +1,7 @@
 package Main;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -49,12 +50,21 @@ public class Baidu extends BaseCrawler{
 	}
 	
 	private void init(){
-		String url = this.generateUrl("shenzhen", 1);
-		super.addWaitList(url);
-		
-		String uniqueKey = "shenzhen-1";
-		super.addUnVisitPath(uniqueKey);
-		
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader("./Seed/baidu-city.txt"));
+			String tmpStr = null;
+			while((tmpStr = reader.readLine()) != null){
+				if (!tmpStr.startsWith("#")) {
+					String url = this.generateUrl(tmpStr, 1);
+					super.addWaitList(url);
+					String uniqueKey = tmpStr + "-1";
+					super.addUnVisitPath(uniqueKey);
+				}
+			}
+			reader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**

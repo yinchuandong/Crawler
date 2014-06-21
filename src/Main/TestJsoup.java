@@ -3,6 +3,7 @@ package Main;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
@@ -13,15 +14,22 @@ import java.sql.DriverManager;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.http.Header;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.ProtocolException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.RedirectStrategy;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.RedirectLocations;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -30,6 +38,7 @@ import org.jsoup.select.Elements;
 
 
 import Util.AppUtil;
+import Util.PageUtil;
 
 /**
  * 用来测试jsoup的解析
@@ -39,10 +48,25 @@ import Util.AppUtil;
 public class TestJsoup {
 
 	public static void main(String[] args){
-		
-//		testHttpGet();
+		long begin = System.currentTimeMillis();
+		testHttpGet();
 //		testJsoupUrl();
-		testParseJson();
+//		testParseJson();
+//		testParseDir();
+		long end = System.currentTimeMillis();
+		System.out.println("耗时：" + (end - begin) + "ms");
+	}
+	
+	
+	
+	public static void testParseDir(){
+		File dir = new File("E:\\web");
+		File[] files = dir.listFiles();
+		for (int i = 0; i < 1; i++) {
+			File file = files[i];
+			String content = PageUtil.readFile(file);
+			System.out.println(content);
+		}
 	}
 	
 	
@@ -153,19 +177,43 @@ public class TestJsoup {
 	 */
 	@SuppressWarnings("deprecation")
 	public static void testHttpGet(){
-		String url = "http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&surl=panyu&cid=1&pn=1&t=" + System.currentTimeMillis();
-		String url2 = "http://lvyou.baidu.com/guangzhoubaiyunshan/";
-		HttpClient client = new DefaultHttpClient();
+//		String url = "http://lvyou.baidu.com/destination/ajax/jingdian?format=ajax&surl=panyu&cid=1&pn=1&t=" + System.currentTimeMillis();
+//		String url2 = "http://lvyou.baidu.com/guangzhoubaiyunshan/";
+		String url2 = "http://www.mafengwo.cn/hotel/s.php?sKeyWord=%E5%B9%BF%E5%B7%9E&sCheckIn=2014-07-04&sCheckOut=2014-07-05";
+		DefaultHttpClient client = new DefaultHttpClient();
+		client.setRedirectStrategy(new RedirectStrategy() {
+			
+			@Override
+			public boolean isRedirected(HttpRequest arg0, HttpResponse arg1,
+					HttpContext arg2) throws ProtocolException {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public HttpUriRequest getRedirect(HttpRequest arg0, HttpResponse arg1,
+					HttpContext arg2) throws ProtocolException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+		
 		HttpGet httpGet = new HttpGet(url2);
 		try {
 			HttpResponse response = client.execute(httpGet);
+			
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				String result = EntityUtils.toString(response.getEntity());
 				//解决中文乱码
 				String test = new String(result.getBytes("ISO-8859-1"), 0, result.length(), "utf-8");
+//				String test = new String(result.getBytes("gbk"), 0, result.length(), "utf-8");
+
+				Header[] headers = response.getAllHeaders();
 				System.out.println(test);
 			}else{
 				System.out.println("页面没有返回");
+				Header[] headers = response.getHeaders("Location");
+				System.out.println(headers[0].getValue());
 			}
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
@@ -173,6 +221,8 @@ public class TestJsoup {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally{
+			httpGet.releaseConnection();
 		}
 	}
 	
@@ -190,8 +240,8 @@ public class TestJsoup {
 	 */
 	public static void testJsoupUrl(){
 		try {
-			
-			Document document2 = Jsoup.parse(new URL("http://lvyou.baidu.com/guangzhoubaiyunshan/"), 5000);
+			Document document2 = Jsoup.parse(new URL("http://www.mafengwo.cn/hotel/s.php?sKeyWord=%E5%B9%BF%E5%B7%9E&sCheckIn=2014-07-04&sCheckOut=2014-07-05"), 5000);
+//			Document document2 = Jsoup.parse(new URL("http://lvyou.baidu.com/guangzhoubaiyunshan/"), 5000);
 			System.out.println(document2.toString());
 			Element container = document2.getElementById("J_slide-holder");
 			System.out.println(container.attr("class"));
