@@ -130,11 +130,11 @@ public class MfwCityLocation {
 	
 	
 	public static void main(String[] args) throws IOException{
-		MfwCityLocation model = new MfwCityLocation();
-		model.loadData("./Seed/mfw-city.txt");
-		model.runTask("./Seed/mfw-city-id.txt");
-//		String location = "/hotel/10083/";
-//		String cityId = location.replaceAll("(/\\w*?/)|(/)", "");
-//		System.out.println(cityId);
+//		MfwCityLocation model = new MfwCityLocation();
+//		model.loadData("./Seed/mfw-city.txt");
+//		model.runTask("./Seed/mfw-city-id.txt");
+		String location = "/hotel/10083.html";
+		String cityId = location.replaceAll("(/\\w*?/)|(\\.(\\w)+)", "");
+		System.out.println(cityId);
 	}
 }

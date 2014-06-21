@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -14,6 +16,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.mysql.jdbc.Field;
+
+import Util.DbUtil;
 import Util.PageUtil;
 import Util.UrlParmUtil;
 
@@ -25,10 +30,6 @@ public class MfwParser {
 	
 	public MfwParser(){
 		cityMap = new HashMap<String, String>();
-	}
-	
-	private void init(){
-		
 	}
 	
 	/**
@@ -48,6 +49,29 @@ public class MfwParser {
 		reader.close();
 	}
 	
+	public void runTask(String dirPath) throws IOException{
+		PrintWriter writer = new PrintWriter(new File("./mfwparser-log.txt"));
+		File dir = new File(dirPath);
+		File[] files = dir.listFiles();
+		for (int i = 0; i < files.length; i++) {
+			File file = files[i];
+			try {
+				parse(file);
+				System.out.println("---------处理完:"+ i +"个------------");
+			} catch (Exception e) {
+				String error = "第 " + i + " 个错误:" + file.getName();
+				error += "\r\n" + e.getMessage()+"\r\n";
+				error += "------------------------------------------------\r\n";
+				System.out.print(error);
+				writer.write(error);
+				writer.flush();
+				e.printStackTrace();
+			}
+		}
+		writer.close();
+		
+	}
+	
 	private void parse(File file) throws IOException{
 		String content = PageUtil.readFile(file);
 		JSONObject jsonObject = JSONObject.fromObject(content);
@@ -64,6 +88,10 @@ public class MfwParser {
 			String name = hItem.attr("data-name");
 			String lat = hItem.attr("data-lat");
 			String lng = hItem.attr("data-lng");
+			
+			//获得酒店id
+			String id = hItem.select(".h-pic a").get(0).attr("href").replaceAll("(/\\w*?/)|(\\.(\\w)+)", "");
+			
 			//获得图片src
 			Element img = hItem.select(".h-pic a img").get(0);
 			String imgSrc = img.attr("src");
@@ -97,22 +125,51 @@ public class MfwParser {
 			
 			System.out.println(otaname + " " + price + " " + jurl);
 			
-//			Hotel hotel = new Hotel();
-//			hotel.setName(name);
-//			hotel.setLat(lat);
-//			hotel.setLng(lng);
-//			hotel.setImgSrc(imgSrc);
-//			hotel.setSummary(summary);
-//			hotel.setAddress(address);
-//			hotel.setBookUrl(jurl);
-//			hotel.setOtaname(otaname);
-//			hotel.setPrice(price);
+			Hotel hotel = new Hotel();
+			hotel.setId(id);
+			hotel.setName(name);
+			hotel.setLat(lat);
+			hotel.setLng(lng);
+			hotel.setImgSrc(imgSrc);
+			hotel.setSummary(summary);
+			hotel.setAddress(address);
+			hotel.setBookUrl(jurl);
+			hotel.setOtaname(otaname);
+			hotel.setPrice(price);
+			hotel.setCityId(cityId);
+			hotel.setCityName(cityName);
+			saveToDb(hotel);
 			
 		}
 //		System.out.println(html);
 	}
 	
+	/**
+	 * 将结果保存到数据库
+	 * @param hotel
+	 * @return
+	 */
+	private int saveToDb(Hotel hotel){
+		String[] params = {
+				hotel.getId(),
+				hotel.getName(),
+				hotel.getLat(),
+				hotel.getLng(),
+				hotel.getImgSrc(),
+				hotel.getSummary(),
+				hotel.getAddress(),
+				hotel.getBookUrl(),
+				hotel.getOtaname(),
+				hotel.getPrice(),
+				hotel.getCityId(),
+				hotel.getCityName()
+		};
+		String sql = "insert into t_hotel (id, name, lat, lng, imgSrc, summary, address, bookUrl, otaname, price, cityId, cityName) values (?,?,?,?,?,?,?,?,?,?,?,?)";
+		return DbUtil.executeUpdate(sql, params);
+	}
+	
 	public class Hotel{
+		private String id;
 		private String name;
 		private String lat;
 		private String lng;
@@ -122,7 +179,16 @@ public class MfwParser {
 		private String otaname;//预订的网站，如：携程网等
 		private String price;
 		private String bookUrl;
+		private String cityId;
+		private String cityName;
 		
+		
+		public String getId() {
+			return id;
+		}
+		public void setId(String id) {
+			this.id = id;
+		}
 		public String getName() {
 			return name;
 		}
@@ -177,6 +243,20 @@ public class MfwParser {
 		public void setBookUrl(String bookUrl) {
 			this.bookUrl = bookUrl;
 		}
+		public String getCityId() {
+			return cityId;
+		}
+		public void setCityId(String cityId) {
+			this.cityId = cityId;
+		}
+		public String getCityName() {
+			return cityName;
+		}
+		public void setCityName(String cityName) {
+			this.cityName = cityName;
+		}
+		
+		
 		
 		
 	}
@@ -185,6 +265,7 @@ public class MfwParser {
 	public static void main(String[] args) throws IOException{
 		MfwParser model = new MfwParser();
 		model.loadCity("./Seed/mfw-city-id.txt");
-		model.parse(new File("E:\\hotel\\10088-1.txt"));
+//		model.parse(new File("E:\\hotel\\10088-1.txt"));
+		model.runTask("E:\\traveldata\\hotel");
 	}
 }
