@@ -2,13 +2,15 @@ package Parser;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import Util.DbUtil;
 import Util.PageUtil;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-public class BaiduParser {
+public class BaiduSceneryParser {
 
 	/**
 	 * 解析旅游json 的scene_list部分
@@ -35,8 +37,12 @@ public class BaiduParser {
 		JSONObject extObj = dataObj.getJSONObject("ext");
 		String mapInfo = extObj.getString("map_info");//获得经纬度
 		String[] mapArr = mapInfo.split(",");
-		String lng = mapArr[0];
-		String lat = mapArr[1];
+		String lng = "";
+		String lat = "";
+		if (mapArr.length == 2) {
+			lng = mapArr[0];
+			lat = mapArr[1];
+		}
 		String mapX = extObj.getString("map_x");
 		String mapY = extObj.getString("map_y");
 		
@@ -53,7 +59,7 @@ public class BaiduParser {
 			recommendVisitTime = besttimeObj.getString("recommend_visit_time");
 			JSONObject ticketObj = contentObj.getJSONObject("ticket_info");
 			if (ticketObj != null && !ticketObj.isNullObject()) {
-				priceDesc = ticketObj.getString("price_desc").replace("元", "");
+				priceDesc = ticketObj.getString("price_desc");
 				openTimeDesc = ticketObj.getString("open_time_desc");
 			}
 		} catch (Exception e) {
@@ -110,11 +116,31 @@ public class BaiduParser {
 		}
 	}
 	
+	public void reparse(){
+		String sql = "select img.surl from t_scenery_img as img where img.surl not in (select s.surl from t_scenery as s)";
+		ResultSet resultSet = DbUtil.executeQuery(sql, null);
+		try {
+			while(resultSet.next()){
+				try {
+					String surl = resultSet.getString("surl");
+					String filename = surl + "-1.json";
+					parseSceneList(new File("E:\\traveldata\\webAll\\" + filename));
+					System.out.println(filename);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args){
-		BaiduParser parser = new BaiduParser();
+		BaiduSceneryParser parser = new BaiduSceneryParser();
 //		parser.parseSceneList(new File("E:\\web\\guangzhourenmingongyuan-1.json"));
 //		parser.parseSceneList(new File("E:\\web\\guangzhou-1.json"));
-//		parser.parseSceneList(new File("E:\\web\\changlonghuanleshijie-1.json"));
+//		parser.parseSceneList(new File("E:\\traveldata\\webAll\\daixianyangjiacitang-1.json"));
 		parser.runTask(new File("E:\\traveldata\\webAll"));
+//		parser.reparse();
 	}
 }

@@ -24,11 +24,11 @@ import Util.UrlParmUtil;
 
 import net.sf.json.JSONObject;
 
-public class MfwParser {
+public class MfwHotelParser {
 
 	private HashMap<String, String> cityMap;
 	
-	public MfwParser(){
+	public MfwHotelParser(){
 		cityMap = new HashMap<String, String>();
 	}
 	
@@ -263,7 +263,7 @@ public class MfwParser {
 	
 	
 	public static void main(String[] args) throws IOException{
-		MfwParser model = new MfwParser();
+		MfwHotelParser model = new MfwHotelParser();
 		model.loadCity("./Seed/mfw-city-id.txt");
 //		model.parse(new File("E:\\hotel\\10088-1.txt"));
 		model.runTask("E:\\traveldata\\hotel");
