@@ -12,13 +12,15 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/Crawler/libs/jsoup/jsoup-1.7.3-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/commons-beanutils-1.8.3.jar"/>
-	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/gson-2.2.4.jar"/>
-	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/gson-2.2.4-javadoc.jar"/>
-	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/gson-2.2.4-sources.jar"/>
-	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/httpclient-4.3.1.jar"/>
-	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/httpcore-4.3.jar"/>
-	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/mysqldriver.jar"/>
-	<classpathentry kind="lib" path="D:/Software/Java/jar packet/json.jar"/>
+	<classpathentry kind="lib" path="libs/google-gson-2.2.4/commons-beanutils-1.8.3.jar"/>
+	<classpathentry kind="lib" path="libs/google-gson-2.2.4/gson-2.2.4-javadoc.jar"/>
+	<classpathentry kind="lib" path="libs/google-gson-2.2.4/gson-2.2.4-sources.jar"/>
+	<classpathentry kind="lib" path="libs/google-gson-2.2.4/gson-2.2.4.jar"/>
+	<classpathentry kind="lib" path="libs/google-gson-2.2.4/httpclient-4.3.1.jar"/>
+	<classpathentry kind="lib" path="libs/google-gson-2.2.4/httpcore-4.3.jar"/>
+	<classpathentry kind="lib" path="libs/google-gson-2.2.4/mysqldriver.jar"/>
+	<classpathentry kind="lib" path="libs/json2.4/commons-httpclient-3.0.1.jar"/>
+	<classpathentry kind="lib" path="libs/jsoup/jsoup-1.7.3-javadoc.jar"/>
+	<classpathentry kind="lib" path="libs/jsoup/jsoup-1.7.3-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
