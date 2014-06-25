@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/httpclient-4.3.1.jar"/>
 	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/httpcore-4.3.jar"/>
 	<classpathentry kind="lib" path="E:/Courseware/senior3_2/Datamining for travel/Crawler/libs/google-gson-2.2.4/mysqldriver.jar"/>
+	<classpathentry kind="lib" path="D:/Software/Java/jar packet/json.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

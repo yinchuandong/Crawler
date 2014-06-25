@@ -33,7 +33,7 @@ public class DbJson {
 	public static void	insertDbData()
 	{
 		int sum=0;
-		File directory=new File("G:\\web\\webAll");
+		File directory=new File("E:\\json");
         File[] fileList = directory.listFiles();
         for(File file : fileList){
                   try{
