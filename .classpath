@@ -22,6 +22,6 @@
 	<classpathentry kind="lib" path="libs/json2.4/commons-httpclient-3.0.1.jar"/>
 	<classpathentry kind="lib" path="libs/jsoup/jsoup-1.7.3-javadoc.jar"/>
 	<classpathentry kind="lib" path="libs/jsoup/jsoup-1.7.3-sources.jar"/>
-	<classpathentry kind="lib" path="D:/Study/Jar/pinyin4j-1.1.0.jar"/>
+	<classpathentry kind="lib" path="libs/pinyin4j-1.1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
