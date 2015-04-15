@@ -51,6 +51,7 @@ public class Baidu_DownSceneryHTML extends BaseCrawler {
 	}
 
 	/**
+	 * 把爬取的内容写入到文件中
 	 * 下载页面，保存格式为utf-8
 	 * 由于修改了下保存编码，所以没有直接使用PageUtil.exportFile
 	 * 
@@ -66,7 +67,6 @@ public class Baidu_DownSceneryHTML extends BaseCrawler {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

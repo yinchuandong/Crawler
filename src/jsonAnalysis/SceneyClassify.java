@@ -79,7 +79,7 @@ public class SceneyClassify {
 			e.printStackTrace();
 		} 
 		
-		String path = "E:\\wordfinal";
+		String path = "D:\\wordfinal";
 		File f = new File(path);
 		if(!f.exists()){
 		  f.mkdirs();
@@ -112,11 +112,7 @@ public class SceneyClassify {
 				writer.close();
 			} catch (Exception e) {
 			} finally{
-				
-			}
-			
-			
-			
+			  }
 			}
 			System.out.println("all :" + count);
 		}
