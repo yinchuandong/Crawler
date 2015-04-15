@@ -45,12 +45,14 @@ public class WordProcess {
 			java.sql.ResultSet rSet=DbJson.executeQuery("SELECT sname from t_scenery", null);
 			return rSet;
 	}
+	
 	public static void WriteFile(String contentString) throws IOException {
 			FileWriter fileWriter=new FileWriter("D://Data//SnamePinYin.txt",true);
 			fileWriter.write(contentString+"\r\n");
 		    fileWriter.flush();
 		    fileWriter.close();
 	}
+	
 	public  static Connection GetConnection()
 	{
 		Connection conn=null;
