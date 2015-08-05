@@ -2,6 +2,8 @@
 =============
 Part2:（Theme Crawler）
 -------------
+This repository is deprecated, the new one is redirected to [https://github.com/yinchuandong/DistributedCrawler](https://github.com/yinchuandong/DistributedCrawler)
+-------------
 ### Source code:
     https://github.com/yinchuandong/Traveljsp		(Search Engine)
     https://github.com/yinchuandong/Crawler  		(Theme Crawler)
